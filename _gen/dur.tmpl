@@ -1,15 +1,21 @@
+{{range $fmt, $type := .Formats}}
 const (
-{{- range .Scan}}
+{{- range .}}
 {{- range $var, $str := .}}
-	Scan{{$var}} = "{{$str}}"
+	{{$fmt}}{{$var}} = "{{$str}}"
 {{- end}}
 {{- end}}
 )
 
-var = []ScanFmt{
-{{- range .Scan}}
+func (ts Stamp) {{$fmt}}Fmt() string {
+	switch ts {
+{{- range .}}
 {{- range $var, $str := .}}
-	Scan{{$var}},
+	case {{$var}}: 
+		return {{$fmt}}{{$var}}
 {{- end}}
 {{- end}}
+	}
+	return ""
 }
+{{end}}
