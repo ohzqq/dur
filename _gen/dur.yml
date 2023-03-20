@@ -1,0 +1,32 @@
+Scan:
+- HH: "%d"
+- MM: "%d"
+- SS: "%d"
+- MMSS: "%d:%d"
+- HHMMSS: "%d:%d:%d"
+- HHMMSSsss: "%d:%d:%d.%d"
+- Cuestamp: "%d:%d"
+- Timestamp: "%d:%d:%d"
+- FullStamp: "%d:%d:%d.%d"
+
+Stamp:
+- HH: "%02d"
+- MM: "%02d"
+- SS: "%02d"
+- MMSS: "%02d:%02d"
+- HHMMSS: "%02d:%02d:%02d"
+- HHMMSSsss: "%02d:%02d:%02d.%03d"
+- Cuestamp: "%02d:%02d"
+- Timestamp: "%02d:%02d:%02d"
+- FullStamp: "%02d:%02d:%02d.%03d"
+
+Dur:
+- HH: "%dh"
+- MM: "%dm"
+- SS: "%ds"
+- MMSS: "%dm%ds"
+- HHMMSS: "%dh%dm%ds"
+- HHMMSSsss: "%dh%dm%ds%dms"
+- Cuestamp: "%dm%ds"
+- Timestamp: "%dh%dm%ds"
+- FullStamp: "%dh%dm%ds%dms"

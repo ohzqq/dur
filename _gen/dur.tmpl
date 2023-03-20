@@ -1,0 +1,15 @@
+const (
+{{- range .Scan}}
+{{- range $var, $str := .}}
+	Scan{{$var}} = "{{$str}}"
+{{- end}}
+{{- end}}
+)
+
+var = []ScanFmt{
+{{- range .Scan}}
+{{- range $var, $str := .}}
+	Scan{{$var}},
+{{- end}}
+{{- end}}
+}

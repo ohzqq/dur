@@ -9,11 +9,13 @@ import (
 
 type Duration time.Duration
 
+type Stamp int
 type DurFmt int
+type ScanFmt int
+type StampFmt int
 
-//go:generate stringer -type=DurFmt
 const (
-	HH DurFmt = iota
+	HH Stamp = iota
 	MM
 	SS
 	MMSS
@@ -21,7 +23,7 @@ const (
 	HHMMSSsss
 	Timestamp
 	Cuestamp
-	MilliStamp
+	FullStamp
 )
 
 const (
@@ -31,7 +33,7 @@ const (
 	hhNano = 60 * 60 * nano
 )
 
-func Parse(format DurFmt, dur string) Duration {
+func Parse(format Stamp, dur string) Duration {
 	ds := "0s"
 	switch format {
 	case HH:
