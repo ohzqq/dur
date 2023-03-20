@@ -48,16 +48,26 @@ func Format(format Stamp, d time.Duration) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("%w\n", err)
 	}
-	var buf bytes.Buffer
-	_, err = fmt.Fprintf(&buf, format.StampFmt(), times...)
+
+	ds, err := formatDurString(format, times...)
 	if err != nil {
 		return "", fmt.Errorf("%w\n", err)
 	}
-	return buf.String(), nil
+
+	return ds, nil
 }
 
 func (ts Stamp) Format(d time.Duration) (string, error) {
 	return Format(ts, d)
+}
+
+func formatTimestampString(format Stamp, times ...any) (string, error) {
+	var buf bytes.Buffer
+	_, err := fmt.Fprintf(&buf, format.StampFmt(), times...)
+	if err != nil {
+		return "", fmt.Errorf("%w\n", err)
+	}
+	return buf.String(), nil
 }
 
 func formatDurString(format Stamp, times ...any) (string, error) {
