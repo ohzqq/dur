@@ -1,13 +1,10 @@
 package dur
 
 import (
+	"bytes"
 	"fmt"
-	"log"
-	"strconv"
 	"time"
 )
-
-type Duration time.Duration
 
 type Stamp int
 
@@ -23,69 +20,136 @@ const (
 	FullStamp
 )
 
-const (
-	nano   = 1000000000
-	ssNano = nano
-	mmNano = 60 * nano
-	hhNano = 60 * 60 * nano
-)
+func Parse(format Stamp, dur string) (time.Duration, error) {
+	times, err := scanTimestamp(format, dur)
+	if err != nil {
+		return time.Duration(0), fmt.Errorf("%w\n", err)
+	}
 
-func Parse(format Stamp, dur string) Duration {
-	return format.Parse(dur)
+	ds, err := formatDurString(format, times...)
+	if err != nil {
+		return time.Duration(0), fmt.Errorf("%w\n", err)
+	}
+
+	def, err := time.ParseDuration(ds)
+	if err != nil {
+		return time.Duration(0), fmt.Errorf("%w\n", err)
+	}
+
+	return def, nil
 }
 
-func (format Stamp) Parse(dur string) Duration {
-	ds := "0s"
+func (format Stamp) Parse(dur string) (time.Duration, error) {
+	return Parse(format, dur)
+}
+
+func Format(format Stamp, d time.Duration) (string, error) {
+	times, err := scanDurationString(format, d.String())
+	if err != nil {
+		return "", fmt.Errorf("%w\n", err)
+	}
+	var buf bytes.Buffer
+	_, err = fmt.Fprintf(&buf, format.StampFmt(), times...)
+	if err != nil {
+		return "", fmt.Errorf("%w\n", err)
+	}
+	return buf.String(), nil
+}
+
+func (ts Stamp) Format(d time.Duration) (string, error) {
+	return Format(ts, d)
+}
+
+func formatDurString(format Stamp, times ...any) (string, error) {
+	var buf bytes.Buffer
+	_, err := fmt.Fprintf(&buf, format.DurFmt(), times...)
+	if err != nil {
+		return "", fmt.Errorf("%w\n", err)
+	}
+	return buf.String(), nil
+}
+
+func scanTimestamp(format Stamp, dur string) ([]any, error) {
+	var ts []any
 	switch format {
 	case HH:
 		fallthrough
 	case MM:
 		fallthrough
 	case SS:
-		ds = fmt.Sprintf(format.DurFmt(), dur)
+		ts = append(ts, dur)
 	case MMSS:
 		var mm, ss int64
 		_, err := fmt.Sscanf(dur, format.ScanFmt(), &mm, &ss)
 		if err != nil {
-			log.Fatal(err)
+			return ts, fmt.Errorf("%w\n", err)
 		}
-		ds = fmt.Sprintf(format.DurFmt(), mm, ss)
+		ts = append(ts, mm, ss)
 	case HHMMSS:
 		var hh, mm, ss int64
 		_, err := fmt.Sscanf(dur, format.ScanFmt(), &hh, &mm, &ss)
 		if err != nil {
-			log.Fatal(err)
+			return ts, fmt.Errorf("%w\n", err)
 		}
-		ds = fmt.Sprintf(format.DurFmt(), hh, mm, ss)
+		ts = append(ts, hh, mm, ss)
 	case HHMMSSsss:
 		var hh, mm, ss, ms int64
 		_, err := fmt.Sscanf(dur, format.ScanFmt(), &hh, &mm, &ss, &ms)
 		if err != nil {
-			log.Fatal(err)
+			return ts, fmt.Errorf("%w\n", err)
 		}
-		ds = fmt.Sprintf(format.DurFmt(), hh, mm, ss, ms)
+		ts = append(ts, hh, mm, ss, ms)
 	}
-	def, err := time.ParseDuration(ds)
-	if err != nil {
-		log.Fatal(err)
+	return ts, nil
+}
+
+func scanDurationString(format Stamp, dur string) ([]any, error) {
+	var ts []any
+	switch format {
+	case HH:
+		var hh int64
+		_, err := fmt.Sscanf(dur, format.DurFmt(), &hh)
+		if err != nil {
+			return ts, fmt.Errorf("%w\n", err)
+		}
+		ts = append(ts, hh)
+	case MM:
+		var mm int64
+		_, err := fmt.Sscanf(dur, format.DurFmt(), &mm)
+		if err != nil {
+			return ts, fmt.Errorf("%w\n", err)
+		}
+		ts = append(ts, mm)
+	case SS:
+		var ss int64
+		_, err := fmt.Sscanf(dur, format.DurFmt(), &ss)
+		if err != nil {
+			return ts, fmt.Errorf("%w\n", err)
+		}
+		ts = append(ts, ss)
+	case MMSS:
+		var mm, ss int64
+		_, err := fmt.Sscanf(dur, format.DurFmt(), &mm, &ss)
+		if err != nil {
+			return ts, fmt.Errorf("%w\n", err)
+		}
+		ts = append(ts, mm, ss)
+	case HHMMSS:
+		var hh, mm, ss int64
+		_, err := fmt.Sscanf(dur, format.DurFmt(), &hh, &mm, &ss)
+		if err != nil {
+			return ts, fmt.Errorf("%w\n", err)
+		}
+		ts = append(ts, hh, mm, ss)
+	case HHMMSSsss:
+		var hh, mm, ss, ms int64
+		_, err := fmt.Sscanf(dur, format.DurFmt(), &hh, &mm, &ss, &ms)
+		if err != nil {
+			return ts, fmt.Errorf("%w\n", err)
+		}
+		ts = append(ts, hh, mm, ss, ms)
 	}
-	return Duration(def)
-}
-
-func formatHH(hh int) string {
-	return strconv.Itoa(hh) + "h"
-}
-
-func formatMM(dur int) string {
-	return strconv.Itoa(dur) + "m"
-}
-
-func formatSS(dur int) string {
-	return strconv.Itoa(dur) + "s"
-}
-
-func formatSSsss(dur float64) string {
-	return strconv.FormatFloat(dur, 'f', 3, 64) + "s"
+	return ts, nil
 }
 
 const (
@@ -94,10 +158,10 @@ const (
 	DurSS        = "%vs"
 	DurMMSS      = "%vm%vs"
 	DurHHMMSS    = "%vh%vm%vs"
-	DurHHMMSSsss = "%vh%vm%vs%vms"
+	DurHHMMSSsss = "%vh%vm%v.%vs"
 	DurCuestamp  = "%vm%vs"
 	DurTimestamp = "%vh%vm%vs"
-	DurFullStamp = "%vh%vm%vs%vms"
+	DurFullStamp = "%vh%vm%v.%vs"
 )
 
 func (ts Stamp) DurFmt() string {
@@ -166,10 +230,10 @@ const (
 	StampSS        = "%02v"
 	StampMMSS      = "%02v:%02v"
 	StampHHMMSS    = "%02v:%02v:%02v"
-	StampHHMMSSsss = "%02v:%02v:%02v.%03d"
+	StampHHMMSSsss = "%02v:%02v:%02v.%03v"
 	StampCuestamp  = "%02v:%02v"
 	StampTimestamp = "%02v:%02v:%02v"
-	StampFullStamp = "%02v:%02v:%02v.%03d"
+	StampFullStamp = "%02v:%02v:%02v.%03v"
 )
 
 func (ts Stamp) StampFmt() string {
