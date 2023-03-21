@@ -3,6 +3,7 @@ package dur
 import (
 	"bytes"
 	"fmt"
+	"strconv"
 	"time"
 )
 
@@ -15,18 +16,18 @@ const (
 	MMSS
 	HHMMSS
 	HHMMSSsss
-	Timestamp
-	Cuestamp
+	TimeStamp
+	CueStamp
 	FullStamp
 )
 
 func Parse(format Stamp, dur string) (time.Duration, error) {
-	times, err := scanTimestamp(format, dur)
+	times, err := SplitTimestamp(format, dur)
 	if err != nil {
 		return time.Duration(0), fmt.Errorf("%w\n", err)
 	}
 
-	ds, err := formatDurString(format, times...)
+	ds, err := FormatDurString(format, times...)
 	if err != nil {
 		return time.Duration(0), fmt.Errorf("%w\n", err)
 	}
@@ -44,12 +45,12 @@ func (format Stamp) Parse(dur string) (time.Duration, error) {
 }
 
 func Format(format Stamp, d time.Duration) (string, error) {
-	times, err := scanDurationString(format, d.String())
+	times, err := SplitDurString(format, d.String())
 	if err != nil {
 		return "", fmt.Errorf("%w\n", err)
 	}
 
-	ds, err := formatDurString(format, times...)
+	ds, err := FormatDurString(format, times...)
 	if err != nil {
 		return "", fmt.Errorf("%w\n", err)
 	}
@@ -61,49 +62,63 @@ func (ts Stamp) Format(d time.Duration) (string, error) {
 	return Format(ts, d)
 }
 
-func formatTimestampString(format Stamp, times ...any) (string, error) {
-	var buf bytes.Buffer
-	_, err := fmt.Fprintf(&buf, format.StampFmt(), times...)
-	if err != nil {
-		return "", fmt.Errorf("%w\n", err)
-	}
-	return buf.String(), nil
-}
-
-func formatDurString(format Stamp, times ...any) (string, error) {
-	var buf bytes.Buffer
-	_, err := fmt.Fprintf(&buf, format.DurFmt(), times...)
-	if err != nil {
-		return "", fmt.Errorf("%w\n", err)
-	}
-	return buf.String(), nil
-}
-
-func scanTimestamp(format Stamp, dur string) ([]any, error) {
+func FormatTimestampString(format Stamp, times ...int) (string, error) {
 	var ts []any
+	for _, t := range times {
+		ts = append(ts, t)
+	}
+
+	var buf bytes.Buffer
+	_, err := fmt.Fprintf(&buf, format.StampFmt(), ts...)
+	if err != nil {
+		return "", fmt.Errorf("%w\n", err)
+	}
+	return buf.String(), nil
+}
+
+func FormatDurString(format Stamp, times ...int) (string, error) {
+	var ts []any
+	for _, t := range times {
+		ts = append(ts, t)
+	}
+
+	var buf bytes.Buffer
+	_, err := fmt.Fprintf(&buf, format.DurFmt(), ts...)
+	if err != nil {
+		return "", fmt.Errorf("%w\n", err)
+	}
+	return buf.String(), nil
+}
+
+func SplitTimestamp(format Stamp, dur string) ([]int, error) {
+	var ts []int
 	switch format {
 	case HH:
 		fallthrough
 	case MM:
 		fallthrough
 	case SS:
-		ts = append(ts, dur)
+		t, err := strconv.Atoi(dur)
+		if err != nil {
+			return ts, fmt.Errorf("%w\n", err)
+		}
+		ts = append(ts, t)
 	case MMSS:
-		var mm, ss int64
+		var mm, ss int
 		_, err := fmt.Sscanf(dur, format.ScanFmt(), &mm, &ss)
 		if err != nil {
 			return ts, fmt.Errorf("%w\n", err)
 		}
 		ts = append(ts, mm, ss)
 	case HHMMSS:
-		var hh, mm, ss int64
+		var hh, mm, ss int
 		_, err := fmt.Sscanf(dur, format.ScanFmt(), &hh, &mm, &ss)
 		if err != nil {
 			return ts, fmt.Errorf("%w\n", err)
 		}
 		ts = append(ts, hh, mm, ss)
 	case HHMMSSsss:
-		var hh, mm, ss, ms int64
+		var hh, mm, ss, ms int
 		_, err := fmt.Sscanf(dur, format.ScanFmt(), &hh, &mm, &ss, &ms)
 		if err != nil {
 			return ts, fmt.Errorf("%w\n", err)
@@ -113,46 +128,46 @@ func scanTimestamp(format Stamp, dur string) ([]any, error) {
 	return ts, nil
 }
 
-func scanDurationString(format Stamp, dur string) ([]any, error) {
-	var ts []any
+func SplitDurString(format Stamp, dur string) ([]int, error) {
+	var ts []int
 	switch format {
 	case HH:
-		var hh int64
+		var hh int
 		_, err := fmt.Sscanf(dur, format.DurFmt(), &hh)
 		if err != nil {
 			return ts, fmt.Errorf("%w\n", err)
 		}
 		ts = append(ts, hh)
 	case MM:
-		var mm int64
+		var mm int
 		_, err := fmt.Sscanf(dur, format.DurFmt(), &mm)
 		if err != nil {
 			return ts, fmt.Errorf("%w\n", err)
 		}
 		ts = append(ts, mm)
 	case SS:
-		var ss int64
+		var ss int
 		_, err := fmt.Sscanf(dur, format.DurFmt(), &ss)
 		if err != nil {
 			return ts, fmt.Errorf("%w\n", err)
 		}
 		ts = append(ts, ss)
 	case MMSS:
-		var mm, ss int64
+		var mm, ss int
 		_, err := fmt.Sscanf(dur, format.DurFmt(), &mm, &ss)
 		if err != nil {
 			return ts, fmt.Errorf("%w\n", err)
 		}
 		ts = append(ts, mm, ss)
 	case HHMMSS:
-		var hh, mm, ss int64
+		var hh, mm, ss int
 		_, err := fmt.Sscanf(dur, format.DurFmt(), &hh, &mm, &ss)
 		if err != nil {
 			return ts, fmt.Errorf("%w\n", err)
 		}
 		ts = append(ts, hh, mm, ss)
 	case HHMMSSsss:
-		var hh, mm, ss, ms int64
+		var hh, mm, ss, ms int
 		_, err := fmt.Sscanf(dur, format.DurFmt(), &hh, &mm, &ss, &ms)
 		if err != nil {
 			return ts, fmt.Errorf("%w\n", err)
@@ -188,9 +203,9 @@ func (ts Stamp) DurFmt() string {
 		return DurHHMMSS
 	case HHMMSSsss:
 		return DurHHMMSSsss
-	case Cuestamp:
+	case CueStamp:
 		return DurCuestamp
-	case Timestamp:
+	case TimeStamp:
 		return DurTimestamp
 	case FullStamp:
 		return DurFullStamp
@@ -224,9 +239,9 @@ func (ts Stamp) ScanFmt() string {
 		return ScanHHMMSS
 	case HHMMSSsss:
 		return ScanHHMMSSsss
-	case Cuestamp:
+	case CueStamp:
 		return ScanCuestamp
-	case Timestamp:
+	case TimeStamp:
 		return ScanTimestamp
 	case FullStamp:
 		return ScanFullStamp
@@ -260,9 +275,9 @@ func (ts Stamp) StampFmt() string {
 		return StampHHMMSS
 	case HHMMSSsss:
 		return StampHHMMSSsss
-	case Cuestamp:
+	case CueStamp:
 		return StampCuestamp
-	case Timestamp:
+	case TimeStamp:
 		return StampTimestamp
 	case FullStamp:
 		return StampFullStamp
