@@ -27,7 +27,7 @@ func Parse(format Stamp, dur string) (time.Duration, error) {
 		return time.Duration(0), fmt.Errorf("%w\n", err)
 	}
 
-	ds, err := FormatDurString(format, times...)
+	ds, err := FormatDuration(format, times...)
 	if err != nil {
 		return time.Duration(0), fmt.Errorf("%w\n", err)
 	}
@@ -50,7 +50,7 @@ func Format(format Stamp, d time.Duration) (string, error) {
 		return "", fmt.Errorf("%w\n", err)
 	}
 
-	ds, err := FormatDurString(format, times...)
+	ds, err := FormatDuration(format, times...)
 	if err != nil {
 		return "", fmt.Errorf("%w\n", err)
 	}
@@ -62,7 +62,7 @@ func (ts Stamp) Format(d time.Duration) (string, error) {
 	return Format(ts, d)
 }
 
-func FormatTimestampString(format Stamp, times ...int) (string, error) {
+func FormatStamp(format Stamp, times ...int) (string, error) {
 	var ts []any
 	for _, t := range times {
 		ts = append(ts, t)
@@ -76,7 +76,7 @@ func FormatTimestampString(format Stamp, times ...int) (string, error) {
 	return buf.String(), nil
 }
 
-func FormatDurString(format Stamp, times ...int) (string, error) {
+func FormatDuration(format Stamp, times ...int) (string, error) {
 	var ts []any
 	for _, t := range times {
 		ts = append(ts, t)
