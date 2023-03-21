@@ -7,19 +7,57 @@ import (
 	"time"
 )
 
-type Stamp int
+type Stamp string
 
 const (
-	HH Stamp = iota
-	MM
-	SS
-	MMSS
-	HHMMSS
-	HHMMSSsss
-	CueStamp
-	TimeStamp
-	FullStamp
+	HH           Stamp = "15"
+	MM           Stamp = "04"
+	SS           Stamp = "05"
+	MMSS         Stamp = "04:05"
+	HHMMSS       Stamp = "15:04:05"
+	HHMMSSsss    Stamp = "15:04:05.000"
+	Sec          Stamp = "05"
+	Min          Stamp = "04"
+	Hour         Stamp = "15"
+	CueStamp     Stamp = "04:05"
+	TimeStamp    Stamp = "15:04:05"
+	DecimalStamp Stamp = "15:04:05.000"
 )
+
+func (ts Stamp) Parse(dur string) (time.Duration, error) {
+	return Parse(ts, dur)
+}
+
+func (ts Stamp) Format(d time.Duration) (string, error) {
+	return Format(ts, d)
+}
+
+func (ts Stamp) Split(t string) ([]int, error) {
+	ds, err := SplitDurString(ts, t)
+	if err == nil {
+		return ds, nil
+	}
+
+	ps, err := SplitTimestamp(ts, t)
+	if err == nil {
+		return ps, nil
+	}
+	return []int{}, fmt.Errorf("cant be parsed")
+}
+
+func (ts Stamp) Join(times ...int) (time.Duration, error) {
+	ds, err := FormatDuration(ts, times...)
+	if err != nil {
+		return time.Duration(0), fmt.Errorf("%w\n", err)
+	}
+
+	def, err := time.ParseDuration(ds)
+	if err != nil {
+		return time.Duration(0), fmt.Errorf("%w\n", err)
+	}
+
+	return def, nil
+}
 
 func Parse(format Stamp, dur string) (time.Duration, error) {
 	times, err := SplitTimestamp(format, dur)
@@ -40,10 +78,6 @@ func Parse(format Stamp, dur string) (time.Duration, error) {
 	return def, nil
 }
 
-func (format Stamp) Parse(dur string) (time.Duration, error) {
-	return Parse(format, dur)
-}
-
 func Format(format Stamp, d time.Duration) (string, error) {
 	times, err := SplitDurString(format, d.String())
 	if err != nil {
@@ -56,10 +90,6 @@ func Format(format Stamp, d time.Duration) (string, error) {
 	}
 
 	return ds, nil
-}
-
-func (ts Stamp) Format(d time.Duration) (string, error) {
-	return Format(ts, d)
 }
 
 func FormatStamp(format Stamp, times ...int) (string, error) {
@@ -103,21 +133,21 @@ func SplitTimestamp(format Stamp, dur string) ([]int, error) {
 			return ts, fmt.Errorf("%w\n", err)
 		}
 		ts = append(ts, t)
-	case MMSS, CueStamp:
+	case MMSS:
 		var mm, ss int
 		_, err := fmt.Sscanf(dur, format.ScanFmt(), &mm, &ss)
 		if err != nil {
 			return ts, fmt.Errorf("%w\n", err)
 		}
 		ts = append(ts, mm, ss)
-	case HHMMSS, TimeStamp:
+	case HHMMSS:
 		var hh, mm, ss int
 		_, err := fmt.Sscanf(dur, format.ScanFmt(), &hh, &mm, &ss)
 		if err != nil {
 			return ts, fmt.Errorf("%w\n", err)
 		}
 		ts = append(ts, hh, mm, ss)
-	case HHMMSSsss, FullStamp:
+	case HHMMSSsss:
 		var hh, mm, ss, ms int
 		_, err := fmt.Sscanf(dur, format.ScanFmt(), &hh, &mm, &ss, &ms)
 		if err != nil {
@@ -152,21 +182,21 @@ func SplitDurString(format Stamp, dur string) ([]int, error) {
 			return ts, fmt.Errorf("%w\n", err)
 		}
 		ts = append(ts, ss)
-	case MMSS, CueStamp:
+	case MMSS:
 		var mm, ss int
 		_, err := fmt.Sscanf(dur, format.DurFmt(), &mm, &ss)
 		if err != nil {
 			return ts, fmt.Errorf("%w\n", err)
 		}
 		ts = append(ts, mm, ss)
-	case HHMMSS, TimeStamp:
+	case HHMMSS:
 		var hh, mm, ss int
 		_, err := fmt.Sscanf(dur, format.DurFmt(), &hh, &mm, &ss)
 		if err != nil {
 			return ts, fmt.Errorf("%w\n", err)
 		}
 		ts = append(ts, hh, mm, ss)
-	case HHMMSSsss, FullStamp:
+	case HHMMSSsss:
 		var hh, mm, ss, ms int
 		_, err := fmt.Sscanf(dur, format.DurFmt(), &hh, &mm, &ss, &ms)
 		if err != nil {
@@ -203,12 +233,6 @@ func (ts Stamp) DurFmt() string {
 		return DurHHMMSS
 	case HHMMSSsss:
 		return DurHHMMSSsss
-	case CueStamp:
-		return DurCuestamp
-	case TimeStamp:
-		return DurTimestamp
-	case FullStamp:
-		return DurFullStamp
 	}
 	return ""
 }
@@ -239,12 +263,6 @@ func (ts Stamp) ScanFmt() string {
 		return ScanHHMMSS
 	case HHMMSSsss:
 		return ScanHHMMSSsss
-	case CueStamp:
-		return ScanCuestamp
-	case TimeStamp:
-		return ScanTimestamp
-	case FullStamp:
-		return ScanFullStamp
 	}
 	return ""
 }
@@ -275,12 +293,6 @@ func (ts Stamp) StampFmt() string {
 		return StampHHMMSS
 	case HHMMSSsss:
 		return StampHHMMSSsss
-	case CueStamp:
-		return StampCuestamp
-	case TimeStamp:
-		return StampTimestamp
-	case FullStamp:
-		return StampFullStamp
 	}
 	return ""
 }
