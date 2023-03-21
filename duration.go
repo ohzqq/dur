@@ -13,15 +13,15 @@ const (
 	HH           Stamp = "15"
 	MM           Stamp = "04"
 	SS           Stamp = "05"
-	MMSS         Stamp = "04:05"
-	HHMMSS       Stamp = "15:04:05"
-	HHMMSSsss    Stamp = "15:04:05.000"
-	Sec          Stamp = "05"
+	MMSS         Stamp = "00:00"
+	HHMMSS       Stamp = "00:00:00"
+	HHMMSSsss    Stamp = "00:00:00.000"
+	Sec          Stamp = "15"
 	Min          Stamp = "04"
-	Hour         Stamp = "15"
-	CueStamp     Stamp = "04:05"
-	TimeStamp    Stamp = "15:04:05"
-	DecimalStamp Stamp = "15:04:05.000"
+	Hour         Stamp = "05"
+	CueStamp     Stamp = "00:00"
+	TimeStamp    Stamp = "00:00:00"
+	DecimalStamp Stamp = "00:00:00.000"
 )
 
 func (ts Stamp) Parse(dur string) (time.Duration, error) {
@@ -42,6 +42,7 @@ func (ts Stamp) Split(t string) ([]int, error) {
 	if err == nil {
 		return ps, nil
 	}
+
 	return []int{}, fmt.Errorf("cant be parsed")
 }
 
@@ -79,7 +80,12 @@ func Parse(format Stamp, dur string) (time.Duration, error) {
 }
 
 func Format(format Stamp, d time.Duration) (string, error) {
-	times, err := SplitDurString(format, d.String())
+	dur := d.String()
+	if dur == "0s" {
+		return string(format), nil
+	}
+
+	times, err := SplitDurString(format, dur)
 	if err != nil {
 		return "", fmt.Errorf("%w\n", err)
 	}
