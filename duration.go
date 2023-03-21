@@ -16,8 +16,8 @@ const (
 	MMSS
 	HHMMSS
 	HHMMSSsss
-	TimeStamp
 	CueStamp
+	TimeStamp
 	FullStamp
 )
 
@@ -103,21 +103,21 @@ func SplitTimestamp(format Stamp, dur string) ([]int, error) {
 			return ts, fmt.Errorf("%w\n", err)
 		}
 		ts = append(ts, t)
-	case MMSS:
+	case MMSS, CueStamp:
 		var mm, ss int
 		_, err := fmt.Sscanf(dur, format.ScanFmt(), &mm, &ss)
 		if err != nil {
 			return ts, fmt.Errorf("%w\n", err)
 		}
 		ts = append(ts, mm, ss)
-	case HHMMSS:
+	case HHMMSS, TimeStamp:
 		var hh, mm, ss int
 		_, err := fmt.Sscanf(dur, format.ScanFmt(), &hh, &mm, &ss)
 		if err != nil {
 			return ts, fmt.Errorf("%w\n", err)
 		}
 		ts = append(ts, hh, mm, ss)
-	case HHMMSSsss:
+	case HHMMSSsss, FullStamp:
 		var hh, mm, ss, ms int
 		_, err := fmt.Sscanf(dur, format.ScanFmt(), &hh, &mm, &ss, &ms)
 		if err != nil {
@@ -152,21 +152,21 @@ func SplitDurString(format Stamp, dur string) ([]int, error) {
 			return ts, fmt.Errorf("%w\n", err)
 		}
 		ts = append(ts, ss)
-	case MMSS:
+	case MMSS, CueStamp:
 		var mm, ss int
 		_, err := fmt.Sscanf(dur, format.DurFmt(), &mm, &ss)
 		if err != nil {
 			return ts, fmt.Errorf("%w\n", err)
 		}
 		ts = append(ts, mm, ss)
-	case HHMMSS:
+	case HHMMSS, TimeStamp:
 		var hh, mm, ss int
 		_, err := fmt.Sscanf(dur, format.DurFmt(), &hh, &mm, &ss)
 		if err != nil {
 			return ts, fmt.Errorf("%w\n", err)
 		}
 		ts = append(ts, hh, mm, ss)
-	case HHMMSSsss:
+	case HHMMSSsss, FullStamp:
 		var hh, mm, ss, ms int
 		_, err := fmt.Sscanf(dur, format.DurFmt(), &hh, &mm, &ss, &ms)
 		if err != nil {
