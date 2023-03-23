@@ -16,6 +16,18 @@ type Timestamp struct {
 	Dur time.Duration
 }
 
+func New(d time.Duration) (Timestamp, error) {
+	ts := Timestamp{
+		Dur: d,
+	}
+	ts.split()
+	err := ts.split()
+	if err != nil {
+		return ts, err
+	}
+	return ts, nil
+}
+
 func Parse(e string) (Timestamp, error) {
 	var hh string
 	var mm string
@@ -46,20 +58,28 @@ func Parse(e string) (Timestamp, error) {
 	}
 	ts.Dur = d
 
-	s := strings.Split(fmt.Sprintf("%06.3f", d.Seconds()), ".")
-	secs, err := strconv.Atoi(s[0])
+	err = ts.split()
 	if err != nil {
 		return ts, err
 	}
+
+	return ts, err
+}
+
+func (ts *Timestamp) split() error {
+	s := strings.Split(fmt.Sprintf("%06.3f", ts.Dur.Seconds()), ".")
+	secs, err := strconv.Atoi(s[0])
+	if err != nil {
+		return err
+	}
 	ts.MS, err = strconv.Atoi(s[1])
 	if err != nil {
-		return ts, err
+		return err
 	}
 	ts.HH = secs / 3600
 	ts.MM = secs % 3600 / 60
 	ts.SS = secs % 60
-
-	return ts, err
+	return nil
 }
 
 func (d Timestamp) Secs() string {
